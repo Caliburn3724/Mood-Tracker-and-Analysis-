@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mood Tracker</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+    h1 { color: #333; }
+    .mood-button { padding: 10px 20px; margin: 5px; cursor: pointer; font-size: 16px; }
+    #happy { background-color: #ffeb3b; }
+    #sad { background-color: #2196f3; color: #fff; }
+    #neutral { background-color: #9e9e9e; color: #fff; }
+    #angry { background-color: #f44336; color: #fff; }
+    #excited { background-color: #ff9800; }
+    #anxious { background-color: #ff5722; color: #fff; }
+    #relaxed { background-color: #4caf50; color: #fff; }
+    #bored { background-color: #795548; color: #fff; }
+    #confident { background-color: #3f51b5; color: #fff; }
+    #lonely { background-color: #607d8b; color: #fff; }
+    #curious { background-color: #8bc34a; }
+    #mood-note { width: 100%; padding: 10px; margin: 10px 0; }
+    #history { margin-top: 20px; }
+    .mood-entry { border-bottom: 1px solid #ddd; padding: 10px 0; }
+    #mood-analysis { margin-top: 20px; }
+    canvas { max-width: 600px; margin: 0 auto; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <h1>Mood Tracker</h1>
+  <p>How are you feeling today?</p>
+  
+  <button id="happy" class="mood-button" onclick="saveMood('Happy')">😊 Happy</button>
+  <button id="sad" class="mood-button" onclick="saveMood('Sad')">😢 Sad</button>
+  <button id="neutral" class="mood-button" onclick="saveMood('Neutral')">😐 Neutral</button>
+  <button id="angry" class="mood-button" onclick="saveMood('Angry')">😠 Angry</button>
+  <button id="excited" class="mood-button" onclick="saveMood('Excited')">😃 Excited</button>
+  <button id="anxious" class="mood-button" onclick="saveMood('Anxious')">😟 Anxious</button>
+  <button id="relaxed" class="mood-button" onclick="saveMood('Relaxed')">😌 Relaxed</button>
+  <button id="bored" class="mood-button" onclick="saveMood('Bored')">😴 Bored</button>
+  <button id="confident" class="mood-button" onclick="saveMood('Confident')">😎 Confident</button>
+  <button id="lonely" class="mood-button" onclick="saveMood('Lonely')">😔 Lonely</button>
+  <button id="curious" class="mood-button" onclick="saveMood('Curious')">🤔 Curious</button>
+
+  <input type="text" id="mood-note" placeholder="Add a note (optional)">
+
+  <div id="history">
+    <h2>Mood History</h2>
+    <div id="mood-history"></div>
+  </div>
+
+  <div id="mood-analysis">
+    <h2>Mood Analysis</h2>
+    <canvas id="moodChart"></canvas>
+    <div id="analysis"></div>
+  </div>
+
+  <script>
+    // Function to load mood history from local storage
+    function loadMoodHistory() {
+      const moodHistory = JSON.parse(localStorage.getItem('moodHistory')) || [];
+      const moodHistoryContainer = document.getElementById('mood-history');
+      moodHistoryContainer.innerHTML = ''; // Clear previous history
+
+      moodHistory.forEach(entry => {
+        const moodEntry = document.createElement('div');
+        moodEntry.className = 'mood-entry';
+        moodEntry.innerHTML = `<strong>${entry.date}</strong> - Mood: ${entry.mood} <br>Note: ${entry.note || 'No note'}`;
+        moodHistoryContainer.appendChild(moodEntry);
+      });
+
+      analyzeMoodHistory(moodHistory); // Analyze mood history after loading
+    }
+
+    // Function to save mood to local storage
+    function saveMood(mood) {
+      const note = document.getElementById('mood-note').value;
+      const moodHistory = JSON.parse(localStorage.getItem('moodHistory')) || [];
+      const date = new Date().toLocaleString();
+
+      const moodEntry = { date, mood, note };
+      moodHistory.unshift(moodEntry); // Add new entry at the beginning
+      localStorage.setItem('moodHistory', JSON.stringify(moodHistory));
+      document.getElementById('mood-note').value = ''; // Clear the note input
+      loadMoodHistory(); // Refresh history display
+    }
+
+    // Function to analyze mood history and display results
+    function analyzeMoodHistory(moodHistory) {
+      const moodCounts = {};
+      moodHistory.forEach(entry => {
+        moodCounts[entry.mood] = (moodCounts[entry.mood] || 0) + 1;
+      });
+
+      const labels = Object.keys(moodCounts);
+      const data = Object.values(moodCounts);
+      const totalMoods = moodHistory.length;
+
+      // Display analysis
+      const mostFrequentMood = labels[data.indexOf(Math.max(...data))];
+      const analysisContainer = document.getElementById('analysis');
+      analysisContainer.innerHTML = `<strong>Most Frequent Mood:</strong> ${mostFrequentMood} (${Math.round((Math.max(...data) / totalMoods) * 100)}%)`;
+
+      // Create chart
+      const ctx = document.getElementById('moodChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Mood Counts',
+            data: data,
+            backgroundColor: [
+              '#ffeb3b', '#2196f3', '#9e9e9e', '#f44336', '#ff9800',
+              '#ff5722', '#4caf50', '#795548', '#3f51b5', '#607d8b', '#8bc34a'
+            ],
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    // Load mood history on page load
+    window.onload = loadMoodHistory;
+  </script>
+</body>
+</html>
